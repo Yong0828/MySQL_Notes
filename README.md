@@ -297,7 +297,7 @@ group_concat：可以将a列的不同b列的值放在同一行里面，用逗号
 substring_index：截取
 ```
 
-
+4、
 
 
 
