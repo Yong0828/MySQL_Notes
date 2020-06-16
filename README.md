@@ -255,6 +255,28 @@ where date(final_input_time)=date(now())
 group by 1
 ```
 
+12、case  when...then... end  或者if() 等条件语句
+
+ CASE WHEN  [expr] T HEN [result1]… ELSE [default] END 
+
+ IF（[expr],[result1],[result2] ）
+
+```mysql
+select 
+date(odr.final_input_time) dateon
+,count(case when approve_state=1 then id end) 通过单
+,sum(if( approve_state=1,1,0 )) 通过单
+from duckchatdb.debit_order odr
+where 
+date(odr.final_input_time) >='2020-06-01'
+group by 1
+
+```
+
+
+
+
+
 
 
 
@@ -399,7 +421,98 @@ FROM (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNI
 
 ## 附录
 
-常用的时间
+常用的日期函数
+
+```mysql
+今天：select now ()
+今天：select current_date()
+昨天：select date_sub(current_date(),interval 1 day)
+本周周一：select date_sub(curdate(),interval weekday(curdate()) + 0 day)
+上周周一：select date_sub(curdate(),interval weekday(curdate()) + 7 day)
+上周周日：select date_sub(curdate(),interval weekday(curdate()) + 1 day)
+本月1号：select date_add(curdate()-day(curdate())+1,interval 0 month)
+本月1号：select date_add(curdate(),interval -day(curdate())+1 day)
+本月的最后一天：select last_day(curdate())
+上个月的最后一天：select last_day(DATE_SUB(CURRENT_DATE(), INTERVAL 1 month))
+上个月的今天：select date_add(now(), interval -1 month) 
+
+今天是2013年5月20日。
+date_sub('2012-05-25',interval 1 day) 表示 2012-05-24
+date_sub('2012-05-25',interval 0 day) 表示 2012-05-25
+date_sub('2012-05-25',interval -1 day) 表示 2012-05-26
+date_sub('2012-05-31',interval -1 day) 表示 2012-06-01
+date_sub(curdate(),interval 1 day) 表示 2013-05-19
+date_sub(curdate(),interval -1 day) 表示 2013-05-21
+date_sub(curdate(),interval 1 month) 表示 2013-04-20
+date_sub(curdate(),interval -1 month) 表示 2013-06-20
+date_sub(curdate(),interval 1 year) 表示 2012-05-20
+date_sub(curdate(),interval -1 year) 表示 2014-05-20
+
+
+date_add(date,interval num unit)
+#向后偏移时间
+select
+ "2019-01-01" as col1
+ ,date_add("2019-01-01",interval 7 year) as col2
+ ,date_add("2019-01-01",interval 7 month) as col3
+ ,date_add("2019-01-01",interval 7 day) as col4
+select
+ "2019-01-01 01:01:01" as col1
+ ,date_add("2019-01-01 01:01:01",interval 7 hour) as col2
+ ,date_add("2019-01-01 01:01:01",interval 7 minute) as col3
+ ,date_add("2019-01-01 01:01:01",interval 7 second) as col4
+#向前偏移时间
+select
+ "2019-01-01" as col1
+ ,date_sub("2019-01-01",interval 7 year) as col2
+ ,date_sub("2019-01-01",interval 7 month) as col3
+ ,date_sub("2019-01-01",interval 7 day) as col4
+
+select
+"2019-01-01" as col1
+ ,date_add("2019-01-01",interval -7 year) as col2
+ ,date_add("2019-01-01",interval -7 month) as col3
+ ,date_add("2019-01-01",interval -7 day) as col4
+
+#两日期做差
+datediff(end_date,start_date)
+select datediff("2019-01-07","2019-01-01")
+
+
+#两时间做差
+timestampdiff(second, create_time, update_time)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
