@@ -54,7 +54,7 @@ drop table dw.fy_0101
 
 
 
-2、查询 where 语句
+2、where 语句  where一般存在代码末端，用来加限制条件的时候使用
 
 ```mysql
 select  *  from  debit_order where final_input_time='2020-06-19'
@@ -92,16 +92,17 @@ select * from debit_order limit 100
 
 
 
-5、like 或者 =语句（条件查询，主要用在where后面）
+5、like 、 =语句、in语句（条件查询，主要用在where后面）
 
-精准查询： =(等于)  <>(不等于)  !=(不等于)
+精准查询： =(等于)  <>(不等于)  !=(不等于) 
 
 ```mysql
 select * from debit_order where date(final_input_time)='2020-06-17' ;
-
 select * from debit_order where date(final_input_time) != '2020-06-17' ;
-
 select * from debit_order where date(final_input_time) <> '2020-06-17' ;
+
+select * from debit_order where date(final_input_time) in ('2020-06-17') ;
+select * from debit_order where date(final_input_time)  not in ('2020-06-17') ;
 ```
 
 模糊匹配："like"会与''%''和 "__"结合使用 其中%居多。''%''可以表示0个或者多个字符，匹配任意字符长度。_"_" 只会表示单个字符，用的比较少，了解即可。
@@ -165,7 +166,9 @@ order by dateon
 
 8、group by 语句 结合聚合语句使用 相当于excel的数据透视功能，对对透视列进行group by
 
-9、表连接
+9、连接
+
+9.1 表连接
 
 left join        左关联： 获取左表所有记录，即使右表没有对应匹配的记录。用的比较多 .
 
@@ -197,6 +200,21 @@ odr.shop_id in (19211762,19213905)
 and channel .channel_code is not null
 ```
 
+9.2 等值联接  等值连接一般把条件放在where里面 使用等号“=”连接相关的表
+
+```MySQL
+select 
+debit.id  debit_id
+,debit.shop_id
+,shop.id shop_id_new
+,shop.name
+from
+debit_order  debit
+,shop shop
+where date(final_input_time)=date(now())
+and shop.id=debit.shop_id
+```
+
 
 
 10、NULL值的处理
@@ -214,6 +232,30 @@ ifnull(column_name,999)
 ```mysql
 where  column_name is  (not) null
 ```
+
+11、子查询
+
+子查询是一个嵌套查询  一般在一张基础表上面在做聚合。
+
+
+
+```mysql
+select
+shop_id
+,count(*) cnt
+from
+(
+select 
+debit.id  debit_id
+,debit.shop_id
+from
+debit_order  debit
+where date(final_input_time)=date(now())
+) a
+group by 1
+```
+
+
 
 
 
@@ -277,7 +319,7 @@ WHERE rank =1;
 ```
 
 
-3、去最值
+3、可以将a列的不同b列的值放在同一行里面，用逗号隔开，且取最值    某个订单有很多人做过回访，查询哪些人做过回访，并且第一次回访的时间是什么时候，第一次回访的人是谁
 
 ```mysql
 select
@@ -299,6 +341,54 @@ substring_index：截取
 
 
 
+4、拆分字段：把同一行里面有逗号隔开的内容，拆分成多行 即group_concat的逆写法
+
+```mysql
+法一：
+select 
+distinct substring_index(substring_index(shop_id,',', b.help_topic_id+1),',',-1) shop_id
+from 
+(
+    select distinct replace(refuse_name,'商户号=','') shop_id
+from credit_auto_check_errinfo
+where refuse_name like '商户号=%'
+) a
+join mysql.help_topic b on b.help_topic_id < (length(a.shop_id) - length(REPLACE(a.shop_id, ',', '')) + 1)
+
+(length(a.shop_id) - length(REPLACE(a.shop_id, ',', '')) + 1):计算字符串中被逗号隔开的字符数
+```
+
+```sql
+法二：
+select 
+distinct substring_index(substring_index(shop_id,',', b.int_value+1),',',-1) shop_id
+from (select distinct replace(refuse_name,'商户号=','') shop_id
+   from credit_auto_check_errinfo
+   where refuse_name like '商户号=%') a
+join (
+SELECT x1.N + x10.N*10 + x100.N*100 + x1000.N*1000 as int_value
+FROM (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) x1,
+       (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) x10,
+       (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) x100,
+       (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9
+       ) x1000
+ WHERE x1.N + x10.N*10 + x100.N*100 + x1000.N*1000 <= 10000)
+ b on b.int_value < (length(a.shop_id) - length(REPLACE(a.shop_id, ',', '')) + 1);
+ 
+```
+
+参考文档： https://blog.csdn.net/qq_31780525/article/details/54416320 
+
+
+
+```mysql
+5、随机取数1000条 order by rand() limit 1000
+ 
+6、从第2条记录开始读1条，取第2高的记录    select * from tablename limit 1,1 
+```
+
+
+
 
 
 ## 高阶
@@ -307,7 +397,9 @@ substring_index：截取
 
 
 
+## 附录
 
+常用的时间
 
 
 
