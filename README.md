@@ -16,15 +16,15 @@
 
 常用表
 
-业务表  ：duckchatdb.debit_order
+业务表  ： debit_order
 
-账单表 ：duckchatdbdebit_detail
+账单表 ： debit_detail
 
-​                duckchatdb. pay_repayment_detail
+​                  pay_repayment_detail
 
-逾期在贷表：hawaiidb.debit_loan
+逾期在贷表： debit_loan
 
-​                       hawaiidb.debit_overdue
+​                       debit_overdue
 
 
 
