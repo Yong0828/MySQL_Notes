@@ -367,7 +367,7 @@ group by 1
 
 
 
-2、用if实现row_number() over(partion by columns order by cloumns asc) 即每行面前按自己想要的逻辑添加序号 ：计算出每日单量第一的大区
+2、用if实现row_number() over(partition by columns order by cloumns asc) 即每行面前按自己想要的逻辑添加序号 ：计算出每日单量第一的大区
 
 ```mysql
 SELECT * FROM (
