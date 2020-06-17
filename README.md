@@ -2,124 +2,205 @@
 
 ## 常用术语
 
-数据库： 数据库是一些关联表的集合 。比如duckchat（业务库）、hawaii（逾期库）
+- **数据库**（database）：是 一个以某种有组织的方式存储的数据集合，就像是一个存放数据的文件柜。
 
-数据表： 数据的矩阵。在一个数据库中的表看起来像一个简单的电子表格。 
+- **数据表**（table）： 文件柜中存放的资料，是某种特定类型数据的结构化清单。
+- **列**（column）：数据表中的字段，所有表都由一个或多个列组成。
+- **行**（row）：表中的一个记录。
 
-​                debit_order(订单表)、debit_overdue（逾期表）、debit_loan（在贷表） 
+- **主键**（primary key）：一列（或一组列），其值能够唯一标识表中每一行。主键是唯一的。
 
-主键：主键是唯一的。一个表只有一个主键，可以用主键查询数据。 
+<br/>
 
-外键：用于关联两个表。比如debit_overdue关联debit_order  外键就是debit_id
+## 检索数据
 
-
-
-常用表
-
-业务表  ： debit_order
-
-账单表 ： debit_detail
-
-​                  pay_repayment_detail
-
-逾期在贷表： debit_loan
-
-​                       debit_overdue
-
-
-
-## 初阶
-
-1、创建或删除 （只需了解即可）
-
-创建表或者视图  
-
-表和视图对于查询者来说区别不大，主要是本身的差别。储存数据是通过表来实现的，有物理存储空间。视图是物理不存在的，相当于子查询。
+### select语句：选择列
 
 ```mysql
-create view IF NOT EXISTS dw.fy_01 as
-(select * from dw.dw_debit_info where dt='20200614' limit 100)
+# 检索所有的列
+select *
+from tablename;
 
-create table IF NOT EXISTS dw.fy_0101 as
-(select * from dw.dw_debit_info where dt='20200614' limit 100)
+# 检索多个列
+select id, name
+from tablename;
+
+# 检索不同的值
+select distinct grade
+from tablename;
 ```
 
-删除表或者视图
+<br/>
+
+### limit语句：限制行数
 
 ```mysql
-drop view dw.fy_01
+# 限制前100行
+select *
+from tablename
+limit 100;
 
-drop table dw.fy_0101
+# 随机抽样1000行
+select *
+from tablename
+order by rand()
+limit 1000;
 ```
 
+<br/>
 
+## 排序检索
 
-2、where 语句  where一般存在代码末端，用来加限制条件的时候使用
+### order by语句：排序
+
+- order by 默认升序：asc，降序为：desc 
 
 ```mysql
-select  *  from  debit_order where final_input_time='2020-06-19'
+# 默认升序
+select apply_date, name
+from tablename
+order by apply_date;
+
+# 多列排序
+select apply_date, name
+from tablename
+order by apply_date, name desc;
+
+# 按位置排序
+select apply_date, name
+from tablename
+order by 1, 2 desc;
 ```
 
+<br/>
 
+## 过滤数据
 
-3、聚合语句
+### where语句：增加过滤条件
 
-sum( )、count（）、count(distinct )、avg() 
+```mysql
+select *
+from tablename
+where apply_date = '2020-06-18';
+```
+
+<br/>
+
+### where语句常用操作符
+
+- 条件查询：=，<>，!=，>，<
+
+```mysql
+select *
+from tablename
+where apply_date != '2020-06-18';
+
+select *
+from tablename
+where apply_date >= '2020-01-01';
+```
+
+- 范围查询：in、between
+
+```mysql
+select *
+from tablename
+where grade in ('A', 'B');
+
+select *
+from tablename
+where age between 20 and 30;
+```
+
+- 模糊匹配："like"与''%''结合
+
+```mysql
+select *
+from tablename
+where name like '%%医院%%';
+```
+
+- 多条件查询：and，or
+
+```mysql
+select *
+from tablename
+where grade in ('A', 'B')
+and apply_date >= '2020-01-01';
+```
+
+<br/>
+
+### case  when...then... end或if() 等条件语句
+
+- CASE WHEN  [expr] T HEN [result1]… ELSE [default] END 
+
+- IF（[expr],[result1],[result2] ）
 
 ```mysql
 select 
-
-sum(apply_amount) 申请金额
-
-,count( id)  申通人数
-
-,count(distinct shop_id)  活跃商户
-
-from debit_order
-
-where final_input_state=1
-
-and hidden=0
+ apply_date
+,count(case when approve_state=1 then id end) 通过单
+,sum(if(approve_state=1,1,0)) 通过单
+from tablename
+group by 1
 ```
 
+<br/>
 
+## 汇总数据
 
-4、limit语句(想看表和字段结构的时候用的比较多)
+### 聚合函数
+
+- 常用聚合函数sum( )、count()、count(distinct )、avg() 、max()、min()
 
 ```mysql
-select * from debit_order limit 100
+select 
+ sum(apply_amount) 金额
+,count(id) 人数
+,count(distinct shop_id) 商户数
+from tablename;
 ```
 
+<br/>
 
-
-5、like 、 =语句、in语句（条件查询，主要用在where后面）
-
-精准查询： =(等于)  <>(不等于)  !=(不等于) 
+### group by语句：数据分组
 
 ```mysql
-select * from debit_order where date(final_input_time)='2020-06-17' ;
-select * from debit_order where date(final_input_time) != '2020-06-17' ;
-select * from debit_order where date(final_input_time) <> '2020-06-17' ;
-
-select * from debit_order where date(final_input_time) in ('2020-06-17') ;
-select * from debit_order where date(final_input_time)  not in ('2020-06-17') ;
+select 
+ subtr(apply_time,1,7) apply_month
+,count(id) 人数
+from tablename
+group by dateon;
 ```
 
-模糊匹配："like"会与''%''和 "__"结合使用 其中%居多。''%''可以表示0个或者多个字符，匹配任意字符长度。_"_" 只会表示单个字符，用的比较少，了解即可。
+<br/>
+
+## 子查询
+
+- 子查询是一个嵌套查询  一般在一张基础表上面再做聚合。
 
 ```mysql
-select * from debit_order where shop_name like  '%%威利斯%%' ;
+select
+ shop_id
+,count(*) cnt
+from
+    (
+        select 
+         id
+        ,shop_id
+        from tablename
+    ) a
+group by 1
 ```
 
+<br/>
 
+## 联结表
 
-6、union语句 纵列关联，并且列名称要都相同
+### union语句 纵列关联，并且列名称要都相同
 
-​     union主要用于两张表的上下关联，如果遇有一样的同一行数据，则自动去重
-
-​     union all主要用于两张表的上下关联，如果遇有一样的同一行数据，不会去重
-
-  union
+- union主要用于两张表的上下关联，如果遇有一样的同一行数据，则自动去重
 
 ```mysql
 select 'M1' as overdue_type union
@@ -128,7 +209,7 @@ select 'M3' as overdue_type union
 select 'M3+' as overdue_type 
 ```
 
-union all
+- union all主要用于两张表的上下关联，如果遇有一样的同一行数据，不会去重
 
 ```mysql
 select 'M1' as overdue_type union all
@@ -138,146 +219,51 @@ select 'M3' as overdue_type union all
 select 'M3+' as overdue_type 
 ```
 
+<br/>
 
+### 横向表连接
 
-7、order by 语句  排序 默认升序 (asc)    降序desc 
-
-```mysql
-select 
-
-date(final_input_time) dateon
-
-,count( id)  申通人数
-
-from debit_order
-
-where final_input_state=1
-
-and hidden=0
-
-and date(final_input_time) >='2020-06-01'
-
-group by dateon 
-
-order by dateon 
-```
-
-
-
-8、group by 语句 结合聚合语句使用 相当于excel的数据透视功能，对对透视列进行group by
-
-9、连接
-
-9.1 表连接
-
-left join        左关联： 获取左表所有记录，即使右表没有对应匹配的记录。用的比较多 .
+**left join（左关联）**： 获取左表所有记录，即使右表没有对应匹配的记录。用的比较多 .
 
  ![img](https://www.runoob.com/wp-content/uploads/2014/03/img_leftjoin.gif) 
 
-right join     右关联： 与 LEFT JOIN 相反，用于获取右表所有记录，即使左表没有对应匹配的记录 
+**right join（右关联）**： 与 LEFT JOIN 相反，用于获取右表所有记录，即使左表没有对应匹配的记录 
 
  ![img](https://www.runoob.com/wp-content/uploads/2014/03/img_rightjoin.gif) 
 
-inner join    内关联： 取交集，获取两个表中字段匹配关系的记录 。主要用于共债查询。
+**inner join（内关联）**： 取交集，获取两个表中字段匹配关系的记录 。主要用于共债查询。
 
  ![img](https://www.runoob.com/wp-content/uploads/2014/03/img_innerjoin.gif) 
 
-full join  全关联：取并集。主要用于Lagged
+**full join（全关联）**：取并集。主要用于Lagged
 
 
 
 ```mysql
 select 
-odr.id
+ odr.id
 ,odr.user_name
 ,odr.shop_id
-,channel .channel_code
-,channel .channel_desc
-from duckchatdb.debit_order odr
-left join duckchatdb.shop_debit_channel channel on  odr.channel_id=channel.id
-where 
-odr.shop_id in (19211762,19213905)
-and channel .channel_code is not null
+,channel.channel_code
+,channel.channel_desc
+from tablename odr
+left join shop channel on  odr.channel_id=channel.id;
 ```
 
-9.2 等值联接  等值连接一般把条件放在where里面 使用等号“=”连接相关的表
+#### 等值联接  等值连接一般把条件放在where里面 使用等号“=”连接相关的表
 
 ```MySQL
 select 
-debit.id  debit_id
+ debit.id  debit_id
 ,debit.shop_id
 ,shop.id shop_id_new
 ,shop.name
-from
-debit_order  debit
+from 
+ tablename debit
 ,shop shop
-where date(final_input_time)=date(now())
+where date(apply_time)=date(now())
 and shop.id=debit.shop_id
 ```
-
-
-
-10、NULL值的处理
-
-在列中的处理
-
-```mysql
-ifnull(column_name,0)
-
-ifnull(column_name,999)
-```
-
-在筛选条件里的处理
-
-```mysql
-where  column_name is  (not) null
-```
-
-11、子查询
-
-子查询是一个嵌套查询  一般在一张基础表上面在做聚合。
-
-
-
-```mysql
-select
-shop_id
-,count(*) cnt
-from
-(
-select 
-debit.id  debit_id
-,debit.shop_id
-from
-debit_order  debit
-where date(final_input_time)=date(now())
-) a
-group by 1
-```
-
-12、case  when...then... end  或者if() 等条件语句
-
- CASE WHEN  [expr] T HEN [result1]… ELSE [default] END 
-
- IF（[expr],[result1],[result2] ）
-
-```mysql
-select 
-date(odr.final_input_time) dateon
-,count(case when approve_state=1 then id end) 通过单
-,sum(if( approve_state=1,1,0 )) 通过单
-from duckchatdb.debit_order odr
-where 
-date(odr.final_input_time) >='2020-06-01'
-group by 1
-
-```
-
-
-
-
-
-
 
 
 
@@ -289,9 +275,27 @@ group by 1
 
 ## 中阶
 
+### 10、NULL值的处理
+
+- 在列中的处理
+
+```mysql
+ifnull(column_name,0)
+
+ifnull(column_name,999)
+```
+
+- 在筛选条件里的处理
+
+```mysql
+where  column_name is  (not) null
+```
+
+
+
 一些比较生僻少用的语法
 
-1、csum实现累加功能：将每日的cnt累加求和
+### 1、csum实现累加功能：将每日的cnt累加求和
 
 ```mysql
 SET @csum := 0;
@@ -301,7 +305,7 @@ FROM
 select 
 date(final_input_time) dateon
 ,count(distinct id) cnt
-from debit_order
+from tablename
 where approve_state=1
 and hidden=0
 and date(final_input_time) between '2019-04-01' and '2019-05-01'
@@ -309,9 +313,7 @@ group by 1
 ) a
 ```
 
-
-
-2、用if实现row_number() over(partion by columns order by cloumns asc) 即每行面前按自己想要的逻辑添加序号 ：计算出每日单量第一的大区
+### 2、用if实现row_number() over(partion by columns order by cloumns asc) 即每行面前按自己想要的逻辑添加序号 ：计算出每日单量第一的大区
 
 ```mysql
 SELECT * FROM (
@@ -323,7 +325,7 @@ select
 	shop.area_type
 	,date(final_input_time) dateon
 	,count(*) cnt
-	from  debit_order debit
+	from  tablename debit
 	left join shop on shop.id=debit.shop_id
 	where 
 	debit.final_input_state=1
@@ -340,8 +342,7 @@ WHERE rank =1;
 	
 ```
 
-
-3、可以将a列的不同b列的值放在同一行里面，用逗号隔开，且取最值    某个订单有很多人做过回访，查询哪些人做过回访，并且第一次回访的时间是什么时候，第一次回访的人是谁
+### 3、可以将a列的不同b列的值放在同一行里面，用逗号隔开，且取最值    某个订单有很多人做过回访，查询哪些人做过回访，并且第一次回访的时间是什么时候，第一次回访的人是谁
 
 ```mysql
 select
@@ -363,7 +364,7 @@ substring_index：截取
 
 
 
-4、拆分字段：把同一行里面有逗号隔开的内容，拆分成多行 即group_concat的逆写法
+### 4、拆分字段：把同一行里面有逗号隔开的内容，拆分成多行 即group_concat的逆写法
 
 ```mysql
 法一：
@@ -396,26 +397,51 @@ FROM (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNI
        ) x1000
  WHERE x1.N + x10.N*10 + x100.N*100 + x1000.N*1000 <= 10000)
  b on b.int_value < (length(a.shop_id) - length(REPLACE(a.shop_id, ',', '')) + 1);
- 
+
 ```
 
 参考文档： https://blog.csdn.net/qq_31780525/article/details/54416320 
 
-
+### 5、随机取数1000条
 
 ```mysql
-5、随机取数1000条 order by rand() limit 1000
- 
-6、从第2条记录开始读1条，取第2高的记录    select * from tablename limit 1,1 
+
 ```
 
 
+
+### 6、从第2条记录开始读1条，取第2高的记录
+
+```myslq
+select * from tablename limit 1,1;
+```
+
+
+
+### 创建或删除（只需了解即可）
+
+- 创建表或者视图  
+
+表和视图对于查询者来说区别不大，主要是本身的差别。储存数据是通过表来实现的，有物理存储空间。视图是物理不存在的，相当于子查询。
+
+```mysql
+create view IF NOT EXISTS view_01 as
+(select * from tablename limit 100);
+```
+
+- 删除表或者视图
+
+```mysql
+drop view view_01;
+```
+
+<br/>
 
 
 
 ## 高阶
 
-自己写function。感兴趣的阔以自己做研究。
+未完待续……
 
 
 
