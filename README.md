@@ -311,9 +311,10 @@ and shop.id=debit.shop_id
 
 
 
-## NULL值的处理
+#### NULL值的处理
 
-在列中的处理
+- 在列中的处理
+
 
 ```mysql
 ifnull(column_name,0)
@@ -321,7 +322,8 @@ ifnull(column_name,0)
 ifnull(column_name,999)
 ```
 
-在筛选条件里的处理
+- 在筛选条件里的处理
+
 
 ```mysql
 where  column_name is  (not) null
