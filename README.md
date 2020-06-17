@@ -55,7 +55,7 @@ from tablename;
 select id, name
 from tablename;
 
-# 检索不同的值
+# 检索某一列的不同的值
 select distinct grade
 from tablename;
 ```
@@ -128,7 +128,7 @@ select * from table_order where date(final_input_time) <> '2020-06-17' ;
 select * from table_order where shop_name like  '%%威利斯%%' ;
 ```
 
-- 范围查询：in、between
+- 范围查询：in、between ... and..
 
 ```mysql
 select * from table_order where date(final_input_time) in ('2020-06-17') ;
@@ -148,7 +148,7 @@ and apply_date >= '2020-01-01';
 
 ### case  when...then... end或if() 等条件语句
 
-- CASE WHEN  [expr] T HEN [result1]… ELSE [default] END 
+- CASE WHEN  [expr]  THEN  [result1]… ELSE [default] END 
 
 - IF（[expr],[result1],[result2] ）
 
