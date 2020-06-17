@@ -2,49 +2,37 @@
 
 ## 常用术语
 
-数据库： 数据库是一些关联表的集合 。比如duckchat（业务库）、hawaii（逾期库）
+数据库（database）： 数据库是一些关联表的集合 。比如duckchat（业务库）、hawaii（逾期库）
 
-数据表： 数据的矩阵。在一个数据库中的表看起来像一个简单的电子表格。 
+数据表（table）： 数据的矩阵。在一个数据库中的表看起来像一个简单的电子表格。 
 
-​                debit_order(订单表)、debit_overdue（逾期表）、debit_loan（在贷表） 
+​                table_order(订单表)、table_overdue（逾期表）、table_loan（在贷表） 
 
-主键：主键是唯一的。一个表只有一个主键，可以用主键查询数据。 
+主键（primary key）：主键是唯一的。一个表只有一个主键，可以用主键查询数据。 
 
-外键：用于关联两个表。比如debit_overdue关联debit_order  外键就是debit_id
+外键（foreign Key）：用于关联两个表。比如table_overdue关联table_order  外键就是debit_id
 
 
-
-常用表
-
-业务表  ： debit_order
-
-账单表 ： debit_detail
-
-​                  pay_repayment_detail
-
-逾期在贷表： debit_loan
-
-​                       debit_overdue
 
 
 
 ## 初阶
 
-1、创建或删除 （只需了解即可）
+### 创建或者删除数据（只需了解即可）
 
-创建表或者视图  
+- #### 创建表或者视图  
 
 表和视图对于查询者来说区别不大，主要是本身的差别。储存数据是通过表来实现的，有物理存储空间。视图是物理不存在的，相当于子查询。
 
 ```mysql
 create view IF NOT EXISTS dw.fy_01 as
-(select * from dw.dw_debit_info where dt='20200614' limit 100)
+(select * from  table_debit_info where dt='20200614' limit 100)
 
 create table IF NOT EXISTS dw.fy_0101 as
-(select * from dw.dw_debit_info where dt='20200614' limit 100)
+(select * from  table_debit_info where dt='20200614' limit 100)
 ```
 
-删除表或者视图
+- #### 删除表或者视图
 
 ```mysql
 drop view dw.fy_01
@@ -54,17 +42,134 @@ drop table dw.fy_0101
 
 
 
-2、where 语句  where一般存在代码末端，用来加限制条件的时候使用
+### 检索数据
+
+- #### select语句：选择列
 
 ```mysql
-select  *  from  debit_order where final_input_time='2020-06-19'
+# 检索所有的列
+select *
+from tablename;
+
+# 检索多个列
+select id, name
+from tablename;
+
+# 检索不同的值
+select distinct grade
+from tablename;
+```
+
+- #### limit语句 限制行数  (想看表和字段结构的时候用的比较多)
+
+```mysql
+# 限制前100行
+select * from table_order limit 100;
+
+# 随机抽样1000行
+select *
+from table_order
+order by rand()
+limit 1000;
+
 ```
 
 
 
-3、聚合语句
+### 排序检索
 
-sum( )、count（）、count(distinct )、avg() 
+order by 语句  排序 默认升序 (asc)    降序desc
+
+```mysql
+# 默认升序
+select apply_date, name
+from tablename
+order by apply_date;
+
+# 多列排序
+select apply_date, name
+from tablename
+order by apply_date, name desc;
+
+# 按位置排序
+select apply_date, name
+from tablename
+order by 1, 2 desc;
+```
+
+
+
+
+
+### 过滤数据
+
+#### where 语句：  where一般存在代码末端，用来加限制条件的时候使用
+
+```mysql
+select  *  from  table_order where final_input_time='2020-06-17'
+```
+
+#### where语句常用操作符
+
+- 精准查询： =(等于)  <>(不等于)  !=(不等于)  >（大于） <（小于）
+
+```mysql
+select * from table_order where date(final_input_time)='2020-06-17' ;
+select * from table_order where date(final_input_time) != '2020-06-17' ;
+select * from table_order where date(final_input_time) <> '2020-06-17' ;
+
+
+```
+
+- 模糊匹配："like"会与''%''和 "__"结合使用 其中%居多。''%''可以表示0个或者多个字符，匹配任意字符长度。_"_" 只会表示单个字符，用的比较少，了解即可。
+
+
+```mysql
+select * from table_order where shop_name like  '%%威利斯%%' ;
+```
+
+- 范围查询：in、between
+
+```mysql
+select * from table_order where date(final_input_time) in ('2020-06-17') ;
+select * from table_order where date(final_input_time)  not in ('2020-06-17') ;
+select * from table_order where date(final_input_time)  between '2020-06-01' and '2020-06-17' ;
+
+```
+
+- 多条件查询：and，or
+
+```mysql
+select *
+from tablename
+where grade in ('A', 'B')
+and apply_date >= '2020-01-01';
+```
+
+### case  when...then... end或if() 等条件语句
+
+- CASE WHEN  [expr] T HEN [result1]… ELSE [default] END 
+
+- IF（[expr],[result1],[result2] ）
+
+```mysql
+select 
+date(odr.final_input_time) dateon
+,count(case when approve_state=1 then id end) 通过单
+,sum(if( approve_state=1,1,0 )) 通过单
+from  table_order odr
+where 
+date(odr.final_input_time) >='2020-06-01'
+group by 1
+```
+
+
+
+## 汇总数据
+
+#### 聚合函数
+
+常用的聚合函数 sum( )、count（）、count(distinct )、avg() 、max()、min()
 
 ```mysql
 select 
@@ -75,7 +180,7 @@ sum(apply_amount) 申请金额
 
 ,count(distinct shop_id)  活跃商户
 
-from debit_order
+from table_order
 
 where final_input_state=1
 
@@ -84,42 +189,52 @@ and hidden=0
 
 
 
-4、limit语句(想看表和字段结构的时候用的比较多)
+#### group by 语句
+
+数据分组 结合聚合语句使用 相当于excel的数据透视功能，对对透视列进行group by
 
 ```mysql
-select * from debit_order limit 100
+select 
+ subtr(apply_time,1,7) apply_month
+,count(id) 人数
+from table_order
+group by dateon;
 ```
 
 
 
-5、like 、 =语句、in语句（条件查询，主要用在where后面）
+##  子查询
 
-精准查询： =(等于)  <>(不等于)  !=(不等于) 
-
-```mysql
-select * from debit_order where date(final_input_time)='2020-06-17' ;
-select * from debit_order where date(final_input_time) != '2020-06-17' ;
-select * from debit_order where date(final_input_time) <> '2020-06-17' ;
-
-select * from debit_order where date(final_input_time) in ('2020-06-17') ;
-select * from debit_order where date(final_input_time)  not in ('2020-06-17') ;
-```
-
-模糊匹配："like"会与''%''和 "__"结合使用 其中%居多。''%''可以表示0个或者多个字符，匹配任意字符长度。_"_" 只会表示单个字符，用的比较少，了解即可。
+子查询是一个嵌套查询  一般在一张基础表上面在做聚合。
 
 ```mysql
-select * from debit_order where shop_name like  '%%威利斯%%' ;
+select
+shop_id
+,count(*) cnt
+from
+(
+select 
+debit.id  debit_id
+,debit.shop_id
+from
+table_order  debit
+where date(final_input_time)=date(now())
+) a
+group by 1
 ```
 
 
 
-6、union语句 纵列关联，并且列名称要都相同
+## 表联接
+
+#### union语句 纵列关联(名称要都相同)
 
 ​     union主要用于两张表的上下关联，如果遇有一样的同一行数据，则自动去重
 
 ​     union all主要用于两张表的上下关联，如果遇有一样的同一行数据，不会去重
 
-  union
+-  union
+
 
 ```mysql
 select 'M1' as overdue_type union
@@ -128,7 +243,8 @@ select 'M3' as overdue_type union
 select 'M3+' as overdue_type 
 ```
 
-union all
+- union all
+
 
 ```mysql
 select 'M1' as overdue_type union all
@@ -140,49 +256,25 @@ select 'M3+' as overdue_type
 
 
 
-7、order by 语句  排序 默认升序 (asc)    降序desc 
+#### join语句 横向表联接
 
-```mysql
-select 
+- left join        左关联： 获取左表所有记录，即使右表没有对应匹配的记录。用的比较多 .
 
-date(final_input_time) dateon
-
-,count( id)  申通人数
-
-from debit_order
-
-where final_input_state=1
-
-and hidden=0
-
-and date(final_input_time) >='2020-06-01'
-
-group by dateon 
-
-order by dateon 
-```
-
-
-
-8、group by 语句 结合聚合语句使用 相当于excel的数据透视功能，对对透视列进行group by
-
-9、连接
-
-9.1 表连接
-
-left join        左关联： 获取左表所有记录，即使右表没有对应匹配的记录。用的比较多 .
 
  ![img](https://www.runoob.com/wp-content/uploads/2014/03/img_leftjoin.gif) 
 
-right join     右关联： 与 LEFT JOIN 相反，用于获取右表所有记录，即使左表没有对应匹配的记录 
+- right join     右关联： 与 LEFT JOIN 相反，用于获取右表所有记录，即使左表没有对应匹配的记录 
+
 
  ![img](https://www.runoob.com/wp-content/uploads/2014/03/img_rightjoin.gif) 
 
-inner join    内关联： 取交集，获取两个表中字段匹配关系的记录 。主要用于共债查询。
+- inner join    内关联： 取交集，获取两个表中字段匹配关系的记录 。主要用于共债查询。
+
 
  ![img](https://www.runoob.com/wp-content/uploads/2014/03/img_innerjoin.gif) 
 
-full join  全关联：取并集。主要用于Lagged
+- full join  全关联：取并集。主要用于Lagged
+
 
 
 
@@ -193,14 +285,16 @@ odr.id
 ,odr.shop_id
 ,channel .channel_code
 ,channel .channel_desc
-from duckchatdb.debit_order odr
-left join duckchatdb.shop_debit_channel channel on  odr.channel_id=channel.id
+from  table_order odr
+left join  shop_debit_channel channel on  odr.channel_id=channel.id
 where 
 odr.shop_id in (19211762,19213905)
 and channel .channel_code is not null
 ```
 
-9.2 等值联接  等值连接一般把条件放在where里面 使用等号“=”连接相关的表
+####  等值联接  
+
+  等值联接一般把条件放在where里面 使用等号“=”连接相关的表
 
 ```MySQL
 select 
@@ -209,7 +303,7 @@ debit.id  debit_id
 ,shop.id shop_id_new
 ,shop.name
 from
-debit_order  debit
+table_order  debit
 ,shop shop
 where date(final_input_time)=date(now())
 and shop.id=debit.shop_id
@@ -217,7 +311,7 @@ and shop.id=debit.shop_id
 
 
 
-10、NULL值的处理
+## NULL值的处理
 
 在列中的处理
 
@@ -231,46 +325,6 @@ ifnull(column_name,999)
 
 ```mysql
 where  column_name is  (not) null
-```
-
-11、子查询
-
-子查询是一个嵌套查询  一般在一张基础表上面在做聚合。
-
-
-
-```mysql
-select
-shop_id
-,count(*) cnt
-from
-(
-select 
-debit.id  debit_id
-,debit.shop_id
-from
-debit_order  debit
-where date(final_input_time)=date(now())
-) a
-group by 1
-```
-
-12、case  when...then... end  或者if() 等条件语句
-
- CASE WHEN  [expr] T HEN [result1]… ELSE [default] END 
-
- IF（[expr],[result1],[result2] ）
-
-```mysql
-select 
-date(odr.final_input_time) dateon
-,count(case when approve_state=1 then id end) 通过单
-,sum(if( approve_state=1,1,0 )) 通过单
-from duckchatdb.debit_order odr
-where 
-date(odr.final_input_time) >='2020-06-01'
-group by 1
-
 ```
 
 
@@ -301,7 +355,7 @@ FROM
 select 
 date(final_input_time) dateon
 ,count(distinct id) cnt
-from debit_order
+from table_order
 where approve_state=1
 and hidden=0
 and date(final_input_time) between '2019-04-01' and '2019-05-01'
@@ -323,7 +377,7 @@ select
 	shop.area_type
 	,date(final_input_time) dateon
 	,count(*) cnt
-	from  debit_order debit
+	from  table_order debit
 	left join shop on shop.id=debit.shop_id
 	where 
 	debit.final_input_state=1
