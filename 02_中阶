@@ -121,3 +121,13 @@ FROM (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNI
 ```
 
 
+7、窗口函数
+1）rank( )  over (partition by <用于分组的列名>   order by <用于排序的列名>)    有相同数字时候，排名一样，但是会占用往后的排名 12245
+2）dense_rank( )  over (partition by <用于分组的列名>   order by <用于排序的列名>) 有相同数字时候，排名一样，不会占用往后的排名  12234
+3）row_number( )   over (partition by <用于分组的列名>   order by <用于排序的列名>) 有相同数字时候，排名不一样 123456
+4）avg（）over (partition by <用于分组的列名>   order by <用于排序的列名>)
+5）sum（）over (partition by <用于分组的列名>   order by <用于排序的列名>)
+6）min（）over (partition by <用于分组的列名>   order by <用于排序的列名>)
+7）max（）over (partition by <用于分组的列名>   order by <用于排序的列名>)
+8）count（）over (partition by <用于分组的列名>   order by <用于排序的列名>)
+
