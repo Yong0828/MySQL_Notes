@@ -73,8 +73,7 @@ group_concat：可以将a列的不同b列的值放在同一行里面，用逗号
 substring_index：截取
 ```
 
-4、
-
+ 
 4、拆分字段：把同一行里面有逗号隔开的内容，拆分成多行 即group_concat的逆写法
 
 ```mysql
