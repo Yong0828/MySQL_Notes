@@ -130,4 +130,4 @@ FROM (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNI
 6）min（）over (partition by <用于分组的列名>   order by <用于排序的列名>)
 7）max（）over (partition by <用于分组的列名>   order by <用于排序的列名>)
 8）count（）over (partition by <用于分组的列名>   order by <用于排序的列名>)
-
+9）number between
